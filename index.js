@@ -1,18 +1,3 @@
-// Checking if all folders are installed
-// What are teh folders needed (?)
-
-// Checking if the database is set
-
-// Making axios call to the live football website
-
-// Checking if any match has red card present
-
-// If there exist a red card then return the match and the time when the red card occurs, and if none exist then return empty
-
-// At the end of the day store all matches that has red card and their full time score
-
-//How do I organise the code
-
 const express = require("express");
 const cors = require("cors");
 const PORT = process.env.PORT || 3001;
@@ -46,6 +31,10 @@ function disrupt() {
 
 app.use(cors());
 app.use("/api", football_routes);
+
+app.get("*", (req, res) => {
+  res.status(401).end("Invalid API call");
+});
 
 
 
