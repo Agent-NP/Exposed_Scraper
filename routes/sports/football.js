@@ -42,7 +42,6 @@ router.get("/yesterday", async (req, res) => {
 router.get("/ended", async (req, res) => {
   try {
     const data = await ended_football();
-    console.log(data);
     return res.status(200).json(data);
   } catch (error) {
     return res.status(401).json({

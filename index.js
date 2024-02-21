@@ -3,49 +3,44 @@ const cors = require("cors");
 const http = require("http");
 const { Server } = require("socket.io");
 const PORT = process.env.PORT || 3001;
+const football_routes = require("./routes/sports/football");
+const { live_football } = require("./controllers/sports/live");
 
 const app = express();
-//Terminate
-let terminate = false;
+let previous = [];
 
-//Import all neccessary routes
-const football_routes = require("./routes/sports/football");
+// Function to fetch and broadcast live football data
+async function updateAndBroadcast() {
+  const current = await live_football();
+  if (JSON.stringify(previous) !== JSON.stringify(current)) {
+    previous = current;
+    io.emit("live_football_update", current);
+  }
+}
 
-// function start() {
-//   terminate = false;
-//   const intervalId = setInterval(async () => {
-//     await live();
-//   }, 60000); // 60000 milliseconds = 1 minute
-//   // Clear the interval after a certain time (optional)
-
-//   setTimeout(() => {
-//     if (terminate) {
-//       clearInterval(intervalId);
-//     }
-//   }, 1800000); // Clear after 5 minutes
-// }
-
-// function disrupt() {
-//   terminate = true;
-// }
-
+// Start periodic updates and set a timeout for cleanup
 app.use(cors());
-
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
     origin: "*",
-    methods: ["GET", "POST"]
-  }
+    methods: ["GET", "POST"],
+  },
 });
 
-// app.use("/api", football_routes);
+const intervalId = setInterval(updateAndBroadcast, 60000); // Fetch every minute
+setTimeout(() => clearInterval(intervalId), 1800000); // Clear after 5 minutes
 
-// app.get("*", (req, res) => {
-//   res.status(401).end("Invalid API call");
-// });
+// API routes
+app.use("/api", football_routes);
 
-io.on("connection", socket => {
+// Default route for invalid requests
+app.get("*", (req, res) => {
+  res.status(401).send("Invalid API call");
+});
+
+// Socket.io connection handling
+io.on("connection", (socket) => {
   console.log(`User Connected: ${socket.id}`);
 });
 
